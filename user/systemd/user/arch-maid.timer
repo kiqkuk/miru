@@ -1,0 +1,10 @@
+[Unit]
+Description=arch-maid cleans every week
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1w
+Persistent=true
+
+[Install]
+WantedBy=timers.target

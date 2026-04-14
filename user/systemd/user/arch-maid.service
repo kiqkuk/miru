@@ -1,0 +1,9 @@
+[Unit]
+Description=cleanup screenshot
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/find %h/pics/ss -name "*.png" -type f -mtime +30 -delete
+
+[Install]
+WantedBy=default.target
