@@ -1,0 +1,11 @@
+#!/bin/sh
+
+FILE="$HOME/pics/ss/$(date +'%Y-%m-%d_%H-%m-%s').png"
+mkdir -p "$(dirname "$FILE")"
+
+slurp | grim -g - "$FILE"
+
+if [ -f "$FILE" ]; then
+    wl-copy < "$FILE"
+    notify.sh "Screenshot saved to $FILE and copied to clipboard."
+fi
