@@ -1,0 +1,30 @@
+#!/bin/sh
+
+INTERFACE="wlan0"
+
+iwctl station "$INTERFACE" scan
+
+SELECTED_SSID=$(iwctl station "$INTERFACE" get-networks | \
+  sed 's/\x1b\[[0-9;]*m//g' | \
+  sed '1,4d' | \
+  cut -c 7-38 | \
+  sed 's/[[:space:]]*$//' | \
+  fzf --prompt="Select WiFi: " --reverse
+)
+
+[ -z "$SELECTED_SSID" ] && exit 0
+
+echo "Connecting to $SELECTED_SSID..."
+
+if ! iwctl station "$INTERFACE" connect "$SELECTED_SSID"; then
+  printf "Enter Password for %s: " "$SELECTED_SSID"
+
+  stty -echo
+  read -r PASS
+  stty echo
+  printf "\n"
+
+  if [ -n "$PASS" ]; then
+    echo "$PASS" | iwctl station "$INTERFACE" connect "$SELECTED_SSID"
+  fi
+fi
