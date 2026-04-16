@@ -1,0 +1,15 @@
+#!/bin/sh
+
+MESSAGE=$1
+DURATION=${2:-4}
+NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
+
+echo "$MESSAGE" > "$NOTIF_FILE"
+pkill -RTMIN+13 someblocks
+
+sleep $((DURATION / 2))
+pkill -RTMIN+13 someblocks
+sleep $((DURATION / 2))
+
+echo "" > "$NOTIF_FILE"
+pkill -RTMIN+13 someblocks

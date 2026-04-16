@@ -7,5 +7,5 @@ slurp | grim -g - "$FILE"
 
 if [ -f "$FILE" ]; then
     wl-copy < "$FILE"
-    notify.sh "Screenshot saved to $FILE and copied to clipboard."
+    notify "Screenshot saved to $FILE and copied to clipboard."
 fi

@@ -1,15 +1,11 @@
 #!/bin/sh
 
-if [ -f /tmp/notify_time ]; then
-    exit 0
-fi
-
 cap=$(cat /sys/class/power_supply/BAT0/capacity)
 stat=$(cat /sys/class/power_supply/BAT0/status)
 
 if [ "$cap" -le 20 ] && [ "$stat" != "Charging" ]; then
   if [ ! -f /tmp/notify_time ]; then
-    notify.sh "BATTERY LOW: $cap%" 10 &
+    notify "BATTERY LOW: $cap%" 10 &
   fi
 fi
 

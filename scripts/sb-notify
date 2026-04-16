@@ -1,0 +1,24 @@
+#!/bin/sh
+
+NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
+[ ! -f "$NOTIF_FILE" ] && exit 0
+
+NOTIF=$(cat "$NOTIF_FILE")
+[ -z "$NOTIF" ] && exit 0
+
+LIMIT=38
+ICON="󰂚"
+
+if [ ${#NOTIF} -le $LIMIT ]; then
+  echo "$ICON $NOTIF"
+  exit 0
+fi
+
+SEC=$(date +%S)
+PAGE=$(( (SEC / 2) % 2))
+
+if [ "$PAGE" -eq 0 ]; then
+  echo "$ICON ${NOTIF:0:$LIMIT}.."
+else
+  echo "$ICON ..${NOTIF:$LIMIT}"
+fi

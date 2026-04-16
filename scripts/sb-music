@@ -1,0 +1,26 @@
+#!/bin/sh
+
+PLAYERS="mpv,chromium,qutebrowser"
+
+STATUS=$(playerctl --player=$PLAYERS status 2>/dev/null)
+TITLE=$(playerctl --player=$PLAYERS metadata title 2>/dev/null)
+
+[ -z "$STATUS" ] && exit 0
+
+WIDTH=50
+ICON="󰎈"
+
+TEXT="$TITLE      "
+LENGTH=${#TEXT}
+
+SEC=$(date +%S)
+OFFSET=$(( SEC % LENGTH ))
+
+DISPLAY_TEXT="${TEXT:$OFFSET:$WIDTH}"
+
+if [ ${#DISPLAY_TEXT} -lt $WIDTH ]; then
+  REMAINING=$(( WIDTH - ${#DISPLAY_TEXT} ))
+  DISPLAY_TEXT="${DISPLAY_TEXT}${TEXT:0:$REMAINING}"
+fi
+
+echo "$ICON $DISPLAY_TEXT"

@@ -1,9 +1,19 @@
 #!/bin/sh
 
-DOTS_DIR=$(cd "$(dirname "$0")/.." && pwd)
+SCRIPT_PATH=$(realpath "$0")
+DOTS_DIR=$(dirname "$(dirname "$SCRIPT_PATH")")
 USER_DIR="$DOTS_DIR/user"
 SCRIPTS_SRC="$DOTS_DIR/scripts"
 BIN_TARGET="$HOME/.local/bin"
+
+if [ ! -d "$USER_DIR" ]; then
+  echo "ERROR: wrong folder"
+  echo "stop"
+  exit 1
+fi
+
+echo "Script path: $SCRIPT_PATH"
+echo "Dots dir: $DOTS_DIR"
 
 echo "Checking for broken links..."
 find "$HOME/.config" "$BIN_TARGET" -maxdepth 1 -xtype l -delete -print 2>/dev/null
@@ -16,6 +26,11 @@ if [ -d "$USER_DIR" ]; then
     find "$app_dir" -type f | while read -r DOT_FILE; do
       REL_FILE="${DOT_FILE#$app_dir/}"
       TARGET_FILE="$HOME/.config/$APP_NAME/$REL_FILE"
+
+      if [ -L "$TARGET_FILE" ] || [ -e "$TARGET_FILE" ]; then
+        continue
+      fi
+
       mkdir -p "$(dirname "$TARGET_FILE")"
       ln -sfv "$DOT_FILE" "$TARGET_FILE"
     done
@@ -27,8 +42,17 @@ if [ -d "$SCRIPTS_SRC" ]; then
   mkdir -p "$BIN_TARGET"
   for script_file in "$SCRIPTS_SRC"/*; do
     [ -f "$script_file" ] || continue
+    [ "$(basename "$script_file")" = "deploy" ] && continue
+
     SCRIPT_NAME=$(basename "$script_file")
-    ln -sfv "$script_file" "$BIN_TARGET/$SCRIPT_NAME"
+    TARGET_BIN="$BIN_TARGET/$SCRIPT_NAME"
+
+    if [ -L "$TARGET_BIN" ] || [ -e "$TARGET_BIN" ]; then
+      continue
+    fi
+
+    chmod +x "$script_file"
+    ln -sfv "$script_file" "$TARGET_BIN"
   done
 fi
 

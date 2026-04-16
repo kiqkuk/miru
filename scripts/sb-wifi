@@ -1,9 +1,5 @@
 #!/bin/sh
 
-if [ -f /tmp/notify_time ]; then
-    exit 0
-fi
-
 ssid=$(iwctl station wlan0 show | grep 'Connected network' | sed 's/^.*Connected network *//')
 
 if [ -z "$ssid" ]; then

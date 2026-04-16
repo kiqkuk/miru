@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# play songs
+play_it() {
+  clear
+  v_id=$(echo "$1" | awk -F ' -- ' '{print $2}')
+
+  TITLE=$(yt-dlp --get-title "https://www.youtube.com/watch?v=$v_id" 2>/dev/null)
+  notify "󰎈 Playing: $TITLE" 3 &
+  printf "Loading, please wait..."
+  
+  mpv --no-video \
+      --ytdl-format="bestaudio/best" \
+      --display-tags= \
+      --term-osd-bar \
+      --term-status-msg="\${media-title}
+Time: \${time-pos} / \${duration} [\${percent-pos}%]" \
+      --ytdl-raw-options="yes-playlist=" \
+      --msg-level=all=status,ao=error,cplayer=error \
+      "https://www.youtube.com/watch?v=$v_id&list=RD$v_id"
+}
+
+while true; do
+  query=$(echo "" | fzf --reverse --print-query --no-info \
+    --prompt="Search YouTube: " \
+    --header="ENTER: Search | ESC: Quit" | head -1)
+
+  [ -z "$query" ] && exit
+ 
+  echo "🔍 Searching for: $query ..."
+
+  search_results=$(yt-dlp "ytsearch10:$query" --get-title --get-id --flat-playlist | sed 'N;s/\n/ -- /')
+
+  selected_song=$(echo "$search_results" | fzf --reverse \
+    --prompt="Select song: " \
+    --header="ENTER: Play | ESC: Back")
+  
+  if [ -n "$selected_song" ]; then
+    play_it "$selected_song"
+  fi
+done
