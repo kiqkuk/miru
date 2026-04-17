@@ -1,10 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 # --- dwl-init: Internal Autostart ---
+
+pkill swaybg
+pkill swayidle
+pkill wlsunset
+pkill someblocks
 
 swaybg -i "$HOME/pics/wallpaper.jpg" -m fill &
 swayidle -w timeout 600 'systemctl suspend' &
 wl-paste --type text --watch cliphist store &
 wl-paste --type image --watch cliphist store &
+wlsunset -t 4499 -T 4500 &
 someblocks &
 
-somebar
+exec somebar

@@ -1,9 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 
-temp=$(sensors | grep 'Package id 0' | awk '{print $4}' | tr -d '+°C')
+temp=$(sensors | rg -oP 'Package id 0:.*?\+\K[0-9.]+' | head -n 1)
+[ -z "$temp" ] && { echo " ERR"; exit 1; }
 
-if [ "${temp%.*}" -gt 80 ]; then
-    echo "🔥 $temp°C"
+temp_int=${temp%.*}
+
+NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
+
+if [ "$temp_int" -ge 75 ]; then
+    ICON="🔥"
+
+    if [ ! -s "$NOTIF_FILE" ]; then
+        notify "HOT: ${temp_int}°C" 10 &
+    fi
 else
-    echo " $temp°C"
+    ICON=""
 fi
+
+echo "$ICON ${temp_int}°C"

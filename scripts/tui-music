@@ -1,41 +1,39 @@
-#!/bin/sh
+#!/bin/bash
 
-# play songs
+SOCKET="/tmp/mpv-music.sock"
+
+if [ "$1" == "--remote" ]; then
+  printf "%s\n" "$2" | socat - "$SOCKET" >/dev/null 2>&1
+  exit 0
+fi
+
 play_it() {
-  clear
-  v_id=$(echo "$1" | awk -F ' -- ' '{print $2}')
-
-  TITLE=$(yt-dlp --get-title "https://www.youtube.com/watch?v=$v_id" 2>/dev/null)
-  notify "󰎈 Playing: $TITLE" 3 &
-  printf "Loading, please wait..."
-  
-  mpv --no-video \
-      --ytdl-format="bestaudio/best" \
-      --display-tags= \
-      --term-osd-bar \
-      --term-status-msg="\${media-title}
-Time: \${time-pos} / \${duration} [\${percent-pos}%]" \
-      --ytdl-raw-options="yes-playlist=" \
-      --msg-level=all=status,ao=error,cplayer=error \
-      "https://www.youtube.com/watch?v=$v_id&list=RD$v_id"
+  v_id="${1##* -- }"
+  ! pgrep -x "mpv" > /dev/null && rm -f "$SOCKET"
+  if [ -S "$SOCKET" ]; then
+    printf "loadfile https://www.youtube.com/watch?v=$v_id&list=RD$v_id replace\n" | \
+      socat - "$SOCKET" >/dev/null 2>&1
+  else
+    nohup mpv --no-video \
+        --input-ipc-server="$SOCKET" \
+        --ytdl-format="bestaudio/best" \
+        --ytdl-raw-options="yes-playlist=" \
+        "https://www.youtube.com/watch?v=$v_id&list=RD$v_id" > /dev/null 2>&1 &
+  fi
 }
 
 while true; do
-  query=$(echo "" | fzf --reverse --print-query --no-info \
-    --prompt="Search YouTube: " \
-    --header="ENTER: Search | ESC: Quit" | head -1)
-
-  [ -z "$query" ] && exit
- 
-  echo "🔍 Searching for: $query ..."
-
-  search_results=$(yt-dlp "ytsearch10:$query" --get-title --get-id --flat-playlist | sed 'N;s/\n/ -- /')
-
-  selected_song=$(echo "$search_results" | fzf --reverse \
-    --prompt="Select song: " \
-    --header="ENTER: Play | ESC: Back")
-  
-  if [ -n "$selected_song" ]; then
-    play_it "$selected_song"
-  fi
+  query=$(fzf --reverse --print-query --no-info \
+              --prompt="󰎈 Search: " \
+              --header "CTRL-P: Pause | CTRL-Q: Quit | CTRL-B: Bwd | CTRL-N: Fwd" \
+              --bind "ctrl-p:execute($0 --remote 'cycle pause')" \
+              --bind "ctrl-n:execute($0 --remote 'seek 10')" \
+              --bind "ctrl-b:execute($0 --remote 'seek -10')" \
+              --bind "ctrl-q:execute($0 --remote 'quit')+abort" < /dev/null)
+  [ -z "$query" ] && exit 0
+  results=$(yt-dlp --quiet "ytsearch10:$query" \
+              --get-title --get-id | sed 'N;s/\n/ -- /')
+  [ -z "$results" ] && continue
+  selected=$(echo "$results" | fzf --reverse --no-info --prompt="󰝚 Play: ")
+  [ -n "$selected" ] && play_it "$selected"
 done

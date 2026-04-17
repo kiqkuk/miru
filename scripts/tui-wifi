@@ -1,15 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 
 INTERFACE="wlan0"
 
-iwctl station "$INTERFACE" scan
+iwctl station "$INTERFACE" scan &
 
-SELECTED_SSID=$(iwctl station "$INTERFACE" get-networks | \
-  sed 's/\x1b\[[0-9;]*m//g' | \
-  sed '1,4d' | \
-  cut -c 7-38 | \
-  sed 's/[[:space:]]*$//' | \
-  fzf --prompt="Select WiFi: " --reverse
+GET_SSIDS="iwctl station $INTERFACE"
+GET_SSIDS+=" get-networks | sed 's/\x1b\[[0-9;]*m//g' | rg '(psk|open|8021x)' | sed 's/^[^[:space:]]*//' | rg -oP '^.{0,32}' | sed 's/[[:space:]]*$//'"
+
+SELECTED_SSID=$(eval "$GET_SSIDS" | fzf \
+  --prompt="󰖩 Select WiFi: " \
+  --reverse \
+  --no-info \
+  --header "Ctrl-R: Refresh" \
+  --bind "start:reload(sleep 1 && $GET_SSIDS)" \
+  --bind "focus:reload($GET_SSIDS)" \
+  --bind "ctrl-r:reload($GET_SSIDS)"
 )
 
 [ -z "$SELECTED_SSID" ] && exit 0
@@ -17,14 +22,10 @@ SELECTED_SSID=$(iwctl station "$INTERFACE" get-networks | \
 echo "Connecting to $SELECTED_SSID..."
 
 if ! iwctl station "$INTERFACE" connect "$SELECTED_SSID"; then
-  printf "Enter Password for %s: " "$SELECTED_SSID"
-
-  stty -echo
-  read -r PASS
-  stty echo
-  printf "\n"
+  read -rs -p "Enter Password for $SELECTED_SSID: " PASS
+  echo ""
 
   if [ -n "$PASS" ]; then
-    echo "$PASS" | iwctl station "$INTERFACE" connect "$SELECTED_SSID"
+    printf "%s\n" "$PASS" | iwctl station "$INTERFACE" connect "$SELECTED_SSID"
   fi
 fi

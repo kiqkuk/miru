@@ -1,11 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-FILE="$HOME/pics/ss/$(date +'%Y-%m-%d_%H-%m-%s').png"
-mkdir -p "$(dirname "$FILE")"
+DIR="$HOME/pics/ss"
+FILE="$DIR/$(date +'%Y-%m-%d_%H-%M-%S').png"
 
-slurp | grim -g - "$FILE"
+[[ ! -d "$DIR" ]] && mkdir -p "$DIR"
 
-if [ -f "$FILE" ]; then
+GEOM=$(slurp) || exit 1
+
+grim -g "$GEOM" "$FILE"
+
+if [[ -f "$FILE" ]]; then
     wl-copy < "$FILE"
-    notify "Screenshot saved to $FILE and copied to clipboard."
+    notify "$FILE saved and copied to clipboard"
 fi

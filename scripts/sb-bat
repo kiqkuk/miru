@@ -1,12 +1,29 @@
-#!/bin/sh
+#!/bin/bash
 
-cap=$(cat /sys/class/power_supply/BAT0/capacity)
-stat=$(cat /sys/class/power_supply/BAT0/status)
+bat_path="/sys/class/power_supply/BAT0"
+
+read -r cap < "$bat_path/capacity"
+read -r stat < "$bat_path/status"
 
 if [ "$cap" -le 20 ] && [ "$stat" != "Charging" ]; then
-  if [ ! -f /tmp/notify_time ]; then
+  if [ ! -s "${XDG_RUNTIME_DIR:-/tmp}/notify" ]; then
     notify "BATTERY LOW: $cap%" 10 &
   fi
 fi
 
-[ "$stat" = "Charging" ] && echo "󱐋 $cap%" || echo "󰂂 $cap%"
+if [ "$stat" = "Charging" ]; then
+    ICON="󱐋"
+else
+    if   [ "$cap" -ge 90 ]; then ICON="󰁹";
+    elif [ "$cap" -ge 80 ]; then ICON="󰂂";
+    elif [ "$cap" -ge 70 ]; then ICON="󰂁";
+    elif [ "$cap" -ge 60 ]; then ICON="󰂀";
+    elif [ "$cap" -ge 50 ]; then ICON="󰁿";
+    elif [ "$cap" -ge 40 ]; then ICON="󰁾";
+    elif [ "$cap" -ge 30 ]; then ICON="󰁽";
+    elif [ "$cap" -ge 20 ]; then ICON="󰁼";
+    elif [ "$cap" -ge 10 ]; then ICON="󰁻";
+    else ICON="󰂃"; fi
+fi
+
+echo "$ICON $cap%"

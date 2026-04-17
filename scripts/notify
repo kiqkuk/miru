@@ -1,15 +1,20 @@
-#!/bin/sh
+#!/bin/bash
 
-MESSAGE=$1
-DURATION=${2:-4}
+MESSAGE="$1"
+DURATION=${2:-6}
 NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
+TIME_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify_time"
 
+START_TIME=$(date +%s)
 echo "$MESSAGE" > "$NOTIF_FILE"
-pkill -RTMIN+13 someblocks
+echo "$START_TIME" > "$TIME_FILE"
 
-sleep $((DURATION / 2))
 pkill -RTMIN+13 someblocks
-sleep $((DURATION / 2))
+sleep "$DURATION"
 
-echo "" > "$NOTIF_FILE"
-pkill -RTMIN+13 someblocks
+CURRENT_IN_FILE=$(cat "$TIME_FILE" 2>/dev/null)
+
+if [ "$START_TIME" = "$CURRENT_IN_FILE" ]; then
+  truncate -s 0 "$NOTIF_FILE"
+  pkill -RTMIN+13 someblocks
+fi

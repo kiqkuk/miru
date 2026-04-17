@@ -1,6 +1,3 @@
-
-Mod = Super or Logo
-
 --------------------------------- NAVIGATION ---------------------------------
 
 Mod + j                                               : change focus down

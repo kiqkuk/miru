@@ -1,26 +1,37 @@
-#!/bin/sh
+#!/bin/bash
 
 PLAYERS="mpv,chromium,qutebrowser"
 
+if ! pgrep -f "mpv|chromium|qutebrowser" > /dev/null; then
+    exit 0
+fi
+
 STATUS=$(playerctl --player=$PLAYERS status 2>/dev/null)
 TITLE=$(playerctl --player=$PLAYERS metadata title 2>/dev/null)
+ARTIST=$(playerctl --player=$PLAYERS metadata artist 2>/dev/null)
 
 [ -z "$STATUS" ] && exit 0
 
-WIDTH=50
-ICON="󰎈"
-
-TEXT="$TITLE      "
-LENGTH=${#TEXT}
-
-SEC=$(date +%S)
-OFFSET=$(( SEC % LENGTH ))
-
-DISPLAY_TEXT="${TEXT:$OFFSET:$WIDTH}"
-
-if [ ${#DISPLAY_TEXT} -lt $WIDTH ]; then
-  REMAINING=$(( WIDTH - ${#DISPLAY_TEXT} ))
-  DISPLAY_TEXT="${DISPLAY_TEXT}${TEXT:0:$REMAINING}"
+if [ -n "$ARTIST" ]; then
+    FULL_TEXT="$ARTIST - $TITLE"
+else
+    FULL_TEXT="$TITLE"
 fi
 
-echo "$ICON $DISPLAY_TEXT"
+WIDTH=40
+ICON="󰎈"
+TEXT="$FULL_TEXT   "
+LENGTH=${#TEXT}
+
+if [ "$FULL_TEXT" -le "$WIDTH" ]; then
+    DISPLAY_TEXT="$FULL_TEXT"
+else
+    NOW=$(date +%s)
+    OFFSET=$(( NOW % LENGTH ))
+    
+    CHUNK="${TEXT:$OFFSET}"
+    DISPLAY_TEXT="${CHUNK}${TEXT:0:$OFFSET}"
+    DISPLAY_TEXT="${DISPLAY_TEXT:0:$WIDTH}"
+fi
+
+echo "$ICON $DISPLAY_TEXT" | rg -o '.*'

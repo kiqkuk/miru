@@ -1,24 +1,35 @@
-#!/bin/sh
+#!/bin/bash
 
 NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
-[ ! -f "$NOTIF_FILE" ] && exit 0
+TIME_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify_time"
 
-NOTIF=$(cat "$NOTIF_FILE")
+if [ ! -s "$NOTIF_FILE" ]; then
+  exit 0
+fi
+
+read -r NOTIF < "$NOTIF_FILE"
 [ -z "$NOTIF" ] && exit 0
 
-LIMIT=38
+LIMIT=40
 ICON="󰂚"
+LENGTH="${#NOTIF}"
 
-if [ ${#NOTIF} -le $LIMIT ]; then
+if [ "$LENGTH" -le $LIMIT ]; then
   echo "$ICON $NOTIF"
   exit 0
 fi
 
-SEC=$(date +%S)
-PAGE=$(( (SEC / 2) % 2))
-
-if [ "$PAGE" -eq 0 ]; then
-  echo "$ICON ${NOTIF:0:$LIMIT}.."
+NOW=$(date +%s)
+if [ -f "$TIME_FILE" ]; then
+  read -r START < "$TIME_FILE"
 else
-  echo "$ICON ..${NOTIF:$LIMIT}"
+  START=$NOW
 fi
+
+ELAPSED=$(( NOW - START ))
+PAGES=$(( (LENGTH + LIMIT -1) / LIMIT ))
+CURRENT_PAGE=$(( (ELAPSED / 2) % PAGES ))
+START_IDX=$(( CURRENT_PAGE * LIMIT ))
+DISPLAY_TEXT="${NOTIF:$START_IDX:$LIMIT}"
+
+echo "$ICON $DISPLAY_TEXT"

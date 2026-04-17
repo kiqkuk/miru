@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 SCRIPT_PATH=$(realpath "$0")
 DOTS_DIR=$(dirname "$(dirname "$SCRIPT_PATH")")
@@ -6,71 +6,44 @@ USER_DIR="$DOTS_DIR/user"
 SCRIPTS_SRC="$DOTS_DIR/scripts"
 BIN_TARGET="$HOME/.local/bin"
 
-if [ ! -d "$USER_DIR" ]; then
-  echo "ERROR: wrong folder"
-  echo "stop"
-  exit 1
-fi
-
-echo "Script path: $SCRIPT_PATH"
-echo "Dots dir: $DOTS_DIR"
+[[ ! -d "$USER_DIR" ]] && { echo "ERROR: user folder not found"; exit 1; }
 
 echo "Checking for broken links..."
-find "$HOME/.config" "$BIN_TARGET" -maxdepth 1 -xtype l -delete -print 2>/dev/null
+fd -t l -H --max-depth 2 . "$HOME/.config" "$BIN_TARGET" 2>/dev/null | while read -r link; do
+  [[ ! -e "$link" ]] && rm -v "$link"
+done
 
-if [ -d "$USER_DIR" ]; then
-  for app_dir in "$USER_DIR"/*; do
-    [ -d "$app_dir" ] || continue
-    APP_NAME=$(basename "$app_dir")
-  
-    find "$app_dir" -type f | while read -r DOT_FILE; do
-      REL_FILE="${DOT_FILE#$app_dir/}"
-      TARGET_FILE="$HOME/.config/$APP_NAME/$REL_FILE"
-
-      if [ -L "$TARGET_FILE" ] || [ -e "$TARGET_FILE" ]; then
-        continue
-      fi
-
-      mkdir -p "$(dirname "$TARGET_FILE")"
-      ln -sfv "$DOT_FILE" "$TARGET_FILE"
-    done
+if [[ -d "$USER_DIR" ]]; then
+  echo "Checking user config..."
+  fd -t f -H . "$USER_DIR" | while read -r DOT_FILE; do
+    REL_FILE="${DOT_FILE#$USER_DIR/}"
+    TARGET_FILE="$HOME/.config/$REL_FILE"
+    [[ -e "$TARGET_FILE" || -L "$TARGET_FILE" ]] && continue
+    mkdir -p "$(dirname "$TARGET_FILE")"
+    ln -sfv "$DOT_FILE" "$TARGET_FILE"
   done
 fi
 
-if [ -d "$SCRIPTS_SRC" ]; then
-  echo "Linking scripts to $BIN_TARGET..."
+if [[ -d "$SCRIPTS_SRC" ]]; then
+  echo "Checking scripts on $BIN_TARGET..."
   mkdir -p "$BIN_TARGET"
-  for script_file in "$SCRIPTS_SRC"/*; do
-    [ -f "$script_file" ] || continue
-    [ "$(basename "$script_file")" = "deploy" ] && continue
-
-    SCRIPT_NAME=$(basename "$script_file")
-    TARGET_BIN="$BIN_TARGET/$SCRIPT_NAME"
-
-    if [ -L "$TARGET_BIN" ] || [ -e "$TARGET_BIN" ]; then
-      continue
-    fi
-
-    chmod +x "$script_file"
-    ln -sfv "$script_file" "$TARGET_BIN"
+  fd -t f . "$SCRIPTS_SRC" -E "deploy" | while read -r SCRIPT; do
+    NAME=$(basename "$SCRIPT")
+    TARGET_BIN="$BIN_TARGET/$NAME"
+    [[ -e "$TARGET_BIN" || -L "$TARGET_BIN" ]] && continue
+    chmod +x "$SCRIPT"
+    ln -sfv "$SCRIPT" "$TARGET_BIN"
   done
 fi
 
-ZSHENV="/etc/zsh/zshenv"
-ZDOTDIR_EXPORT="export ZDOTDIR=\"\$HOME/.config/zsh\""
-
-echo "Checking for ZSH installation..."
-
-if [ ! -d "/etc/zsh" ]; then
-  echo "WARNING!: /etc/zsh not found. Zsh might not be installed."
-  echo "Skipping ZDOTDIR configuration."
-else
-  echo "Ensuring ZDOTDIR is set in $ZSHENV."
-
-  if [ -f "$ZSHENV" ] && grep -q "ZDOTDIR" "$ZSHENV"; then
-    echo "ZDOTDIR already exported in $ZSHENV."
-  else
-    echo "Adding ZDOTDIR export to $ZSHENV (requires sudo)..."
-    echo "$ZDOTDIR_EXPORT" | sudo tee -a "$ZSHENV" > /dev/null
+if [[ -d "/etc/zsh" ]]; then
+  ZSHENV="/etc/zsh/zshenv"
+  Z_CONF="export ZDOTDIR=\"\$HOME/.config/zsh\""
+  echo "Checking $ZSHENV"
+  if ! rg -q "ZDOTDIR" "$ZSHENV" 2>/dev/null; then
+    echo "Adding ZDOTDIR to $ZSHENV..."
+    echo "$Z_CONF" | sudo tee -a "$ZSHENV" > /dev/null
   fi
 fi
+
+echo "done"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
-wpctl $@
+wpctl "$@"
 pkill -RTMIN+10 someblocks

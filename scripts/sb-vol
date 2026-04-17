@@ -1,10 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 
 status=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)
 
 if [ $? -ne 0 ]; then
 	echo "󰝟 No Sink"
+  exit 0
+fi
+
+vol_raw=$(echo "$status" | rg -oP '0\.\d+')
+vol_clean=${vol_raw#0.}
+vol_perc=$((10#${vol_clean:-0}))
+
+if [[ "$status" == *"[MUTED]"* ]]; then
+  echo "󰝟 Mute"
 else
-	vol=$(echo "$status" | awk '{print $2 * 100}')
-	[ "${status#*\[MUTED]}" != "$status" ] && echo "󰝟 Mute" || echo "󰕾 ${vol%.*}%"
+  if [ "$vol_perc" -eq 0 ]; then ICON="󰝟";
+  elif [ "$vol_perc" -lt 40 ]; then ICON="󰕿";
+  elif [ "$vol_perc" -lt 70 ]; then ICON="󰖀";
+  else ICON="󰕾"; fi
+    
+  echo "$ICON ${vol_perc}%"
 fi

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # --- WAYLAND SESSION WRAPPER ---
 # Sets up the Wayland environment and starts the window manager.
 
@@ -7,5 +7,6 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 
 # XDG Desktop Portal
 export XDG_CURRENT_DESKTOP=dwl
+export XDG_SESSION_TYPE=wayland
 
 exec dwl -s dwl-init "$@"
