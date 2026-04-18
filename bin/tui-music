@@ -9,16 +9,18 @@ fi
 
 play_it() {
   v_id="${1##* -- }"
+  URL="https://www.youtube.com/watch?v=$v_id&list=RD$v_id"
   ! pgrep -x "mpv" > /dev/null && rm -f "$SOCKET"
   if [ -S "$SOCKET" ]; then
-    printf "loadfile https://www.youtube.com/watch?v=$v_id&list=RD$v_id replace\n" | \
-      socat - "$SOCKET" >/dev/null 2>&1
+    printf "loadfile $URL replace\n" | socat - "$SOCKET" >/dev/null 2>&1
   else
     nohup mpv --no-video \
+        --no-audio-display \
         --input-ipc-server="$SOCKET" \
-        --ytdl-format="bestaudio/best" \
-        --ytdl-raw-options="yes-playlist=" \
-        "https://www.youtube.com/watch?v=$v_id&list=RD$v_id" > /dev/null 2>&1 &
+        --ytdl-format="bestaudio[ext=m4a]/bestaudio" \
+        --cache=yes --demuxer-max-bytes=512KiB \
+        --ytdl-raw-options="no-check-certificate=,yes-playlist=" \
+        "$URL" > /dev/null 2>&1 &
   fi
 }
 
@@ -31,8 +33,11 @@ while true; do
               --bind "ctrl-b:execute($0 --remote 'seek -10')" \
               --bind "ctrl-q:execute($0 --remote 'quit')+abort" < /dev/null)
   [ -z "$query" ] && exit 0
-  results=$(yt-dlp --quiet "ytsearch10:$query" \
-              --get-title --get-id | sed 'N;s/\n/ -- /')
+  results=$(yt-dlp --quiet --flat-playlist \
+              --no-check-certificates \
+              --no-warnings \
+              --print "%(title)s -- %(id)s" \
+              "ytsearch5:$query")
   [ -z "$results" ] && continue
   selected=$(echo "$results" | fzf --reverse --no-info --prompt="󰝚 Play: ")
   [ -n "$selected" ] && play_it "$selected"

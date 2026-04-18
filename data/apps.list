@@ -1,0 +1,4 @@
+foot
+music | foot -T Music tui-music
+neovim | foot nvim
+qutebrowser

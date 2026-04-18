@@ -1,5 +1,0 @@
-[[ -f ~/.local/share/dots/shell/env ]] && . ~/.local/share/dots/shell/env
-
-if [[ -z $DISPLAY && $(tty) == /dev/tty1 ]]; then
-  exec dwl-start
-fi

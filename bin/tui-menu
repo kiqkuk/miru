@@ -1,0 +1,50 @@
+#!/bin/bash
+
+LIST="$HOME/.local/share/miru/apps.list"
+[ ! -f "$LIST" ] && touch "$LIST"
+
+out=$(fzf \
+    --reverse \
+    --no-info \
+    --no-scrollbar \
+    --print-query \
+    --delimiter=" | " \
+    --with-nth=1 \
+    --prompt="󰘳 Run: " \
+    --header="CTRL-H: All Binaries" \
+    --expect="ctrl-h" < "$LIST");
+
+[ -z "$out" ] && exit 0
+
+mapfile -t res <<< "$out"
+query="${res[0]}"
+key="${res[1]}"
+sel="${res[2]}"
+
+if [ "$key" == "ctrl-h" ]; then
+  out_all=$(compgen -c | sort -u | fzf \
+    --reverse \
+    --no-scrollbar \
+    --query="$query" \
+    --print-query \
+    --prompt="󰒲 All: ")
+
+  [ -z "$out_all" ] && exit 0
+
+  mapfile -t res_all <<< "$out_all"
+  query="${res_all[0]}"
+  sel="${res_all[1]}"
+fi
+
+if [[ "$query" == *" "* ]]; then
+  final_cmd="$query"
+else
+  temp_cmd="${sel:-$query}"
+  if [[ "$temp_cmd" == *"|"* ]]; then
+    final_cmd=$(echo "$temp_cmd" | cut -d'|' -f2 | xargs)
+  else
+    final_cmd="$temp_cmd"
+  fi
+fi
+
+[ -n "$final_cmd" ] && setsid --fork sh -c "$final_cmd" >/dev/null 2>&1

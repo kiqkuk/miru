@@ -1,3 +1,0 @@
-#!/bin/bash
-
-fzf --reverse --no-info --no-scrollbar --header="MODKEY = Super or Logo" --prompt="Cheatsheet: " < ~/.local/share/dots/keymaps.txt

@@ -1,0 +1,73 @@
+#!/bin/bash
+
+DOTS="$HOME/.local/share/miru"
+[[ ! -d "$DOTS" ]] && { echo "ERROR: Dots repo not found"; exit 1; }
+
+sudo -v
+
+echo "--- AUDIT: DOTS RECURSIVE CHECK ---"
+
+# checking files to audit
+fd -t f . "$DOTS" | while read -r DOT_FILE; do
+  REL_PATH="${DOT_FILE#$DOTS/}"
+
+  # mapping path
+  if [[ "$REL_PATH" == "etc/"* ]]; then
+    TARGET_FILE="/etc/${REL_PATH#etc/}"
+  elif [[ "$REL_PATH" == "config/"* ]]; then
+    TARGET_FILE="$HOME/.config/${REL_PATH#config/}"
+  elif [[ "$REL_PATH" == "bin/"* ]]; then
+    TARGET_FILE="$HOME/.local/bin/${REL_PATH#bin/}"
+  else
+    continue
+  fi
+
+  # check if file is exist
+  if [[ ! -f "$TARGET_FILE" ]]; then
+    echo "[!] MISSING: $TARGET_FILE"
+    continue
+  fi
+
+  # checking if file is symlink
+  if [[ "$REL_PATH" == "config/"* ]]; then
+    if [[ -L "$TARGET_FILE" ]]; then
+      LINK_TARGET=$(readlink -f "$TARGET_FILE")
+      if [[ "$LINK_TARGET" != "$DOT_FILE" ]]; then
+        echo "[W] WRONG LINK: $REL_PATH -> $LINK_TARGET"
+      fi
+    else
+      echo "[!] NOT A SYMLINK: $TARGET_FILE (Manual file)"
+    fi
+  fi
+
+  # diff check
+  if ! sudo diff -q "$DOT_FILE" "$TARGET_FILE" > /dev/null; then
+    echo "[X] DRIFT DETECTED: $REL_PATH"
+  fi
+done
+
+echo -e "\n--- AUDIT: UNTRACKED USER CONFIGS (~/.config) ---"
+
+fd -t f -H . "$HOME/.config" \
+  -E "**/cache/**" \
+  -E "**/node_modules/**" \
+  -E "**/.git/**" \
+  -E "**/shada/**" | while read -r CFG_FILE; do
+  [[ -L "$CFG_FILE" ]] && continue
+  REL_CFG="${CFG_FILE#$HOME/.config/}"
+  if [[ ! -f "$DOTS/config/$REL_CFG" ]]; then
+    echo "[?] UNTRACKED: .config/$REL_CFG"
+  fi
+done
+
+echo -e "\n--- AUDIT: UNTRACKED ROOT CONFIGS (/etc) ---"
+
+fd -t d --max-depth 1 . "$DOTS/etc" | while read -r REPO_SUB; do
+  SUB_NAME=$(basename "$REPO_SUB")
+  fd -t f . "/etc/$SUB_NAME" 2>/dev/null | while read -r ETC_FILE; do
+    REL_ETC="${ETC_FILE#/etc/}"
+    if [[ ! -f "$DOTS/etc/$REL_ETC" ]]; then
+      echo "[?] UNTRACKED IN MANAGED FOLDER: /etc/$REL_ETC"
+    fi
+  done
+done

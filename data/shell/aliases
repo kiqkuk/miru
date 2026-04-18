@@ -1,0 +1,23 @@
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../../'
+alias mkdir='mkdir -p'
+
+alias goshell='cd ~/.local/share/miru/shell'
+alias goscript='cd ~/.local/share/miru/scripts'
+alias miru='cd ~/.local/share/miru'
+alias goconf='cd ~/.local/share/miru/user'
+alias vconf='cd ~.config/nvim'
+alias godwl='cd ~/work/dwl'
+
+alias ls='ls --color=auto --group-directories-first'
+alias ll='ls -lvah --group-directories-first'
+alias lx='ls -lXB'
+
+alias rm='rm -v'
+alias cp='cp -v'
+alias mv='mv -v'
+
+alias up='sudo pacman -Syu'
+alias cleanup='sudo pacman -Rns $(pacman -Qdtq); paccache -r -k 2'
+alias update='sudo pacman -Syu && cleanup'

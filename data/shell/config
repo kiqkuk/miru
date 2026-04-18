@@ -2,18 +2,18 @@
 # Part of kiqkuk's dotfiles
 # Handles environment and modular shell configs.
 
-SHELLCONF="$HOME/.local/share/dots/shell"
+ZSH_CONF="$HOME/.local/share/miru/data/shell"
 
 # Load environment & PATH
-[[ -f "$SHELLCONF/env" ]] && . "$SHELLCONF/env"
+[[ -f "$ZSH_CONF/env" ]] && . "$ZSH_CONF/env"
 
 # Exit if not running interactively
 [[ -o interactive ]] || return
 
 # Load modular shell components
-[[ -f "$SHELLCONF/completions" ]] && . "$SHELLCONF/completions"
-[[ -f "$SHELLCONF/aliases" ]] && . "$SHELLCONF/aliases"
-[[ -f "$SHELLCONF/prompt" ]] && . "$SHELLCONF/prompt"
+[[ -f "$ZSH_CONF/completions" ]] && . "$ZSH_CONF/completions"
+[[ -f "$ZSH_CONF/aliases" ]] && . "$ZSH_CONF/aliases"
+[[ -f "$ZSH_CONF/prompt" ]] && . "$ZSH_CONF/prompt"
 
 # zsh-syntax-highlighting
 [[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && . /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
