@@ -22,6 +22,7 @@ git clone git@github.com:kiqkuk/miru.git ~/.local/share/miru
 # Build & Deploy
 cd ~/.local/share/miru
 ./bin/deploy
+```
 
 ## Note on System Configs:
 Files inside the `etc/` directory are currently not included in the `deploy` script. You must copy them manually. Most of these configurations are highly specific to my current hardware/device.
