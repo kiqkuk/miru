@@ -1,4 +1,5 @@
 #!/bin/bash
+# miru: sb-date | kiqkuk
 
 printf -v current_date "%(%a, %d %b | %H:%M)T" -1
 

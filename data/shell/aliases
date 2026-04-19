@@ -1,3 +1,5 @@
+# miru: aliases | kiqkuk
+
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../../'

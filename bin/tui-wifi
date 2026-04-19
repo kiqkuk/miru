@@ -1,31 +1,22 @@
 #!/bin/bash
+# miru: tui-wifi | kiqkuk
 
 INTERFACE="wlan0"
 
-iwctl station "$INTERFACE" scan &
+printf "\rScanning..."
+iwctl station $INTERFACE scan &>/dev/null
+sleep 1
+WIFI_LIST="iwctl station $INTERFACE get-networks | sed 's/\x1b\[[0-9;]*m//g' | grep -E 'psk|open|8021x' | cut -c 5-32 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'"
 
-GET_SSIDS="iwctl station $INTERFACE"
-GET_SSIDS+=" get-networks | sed 's/\x1b\[[0-9;]*m//g' | rg '(psk|open|8021x)' | sed 's/^[^[:space:]]*//' | rg -oP '^.{0,32}' | sed 's/[[:space:]]*$//'"
-
-SELECTED_SSID=$(eval "$GET_SSIDS" | fzf \
+SELECTED_SSID=$(fzf \
   --prompt="󰖩 Select WiFi: " \
   --reverse \
   --no-info \
-  --header "Ctrl-R: Refresh" \
-  --bind "start:reload(sleep 1 && $GET_SSIDS)" \
-  --bind "focus:reload($GET_SSIDS)" \
-  --bind "ctrl-r:reload($GET_SSIDS)"
+  --bind "start:reload($WIFI_LIST)"
 )
 
 [ -z "$SELECTED_SSID" ] && exit 0
 
 echo "Connecting to $SELECTED_SSID..."
 
-if ! iwctl station "$INTERFACE" connect "$SELECTED_SSID"; then
-  read -rs -p "Enter Password for $SELECTED_SSID: " PASS
-  echo ""
-
-  if [ -n "$PASS" ]; then
-    printf "%s\n" "$PASS" | iwctl station "$INTERFACE" connect "$SELECTED_SSID"
-  fi
-fi
+iwctl station "$INTERFACE" connect "$SELECTED_SSID"

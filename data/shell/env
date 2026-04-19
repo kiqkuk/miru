@@ -1,5 +1,4 @@
-# --- ENVIRONMENT VARIABLES ---
-# Standardized paths and application default for a Wayland-native environment.
+# miru: environment | kiqkuk
 
 # XDG Base Directory Compliance
 export XDG_CONFIG_HOME="$HOME/.config"

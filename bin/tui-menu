@@ -1,6 +1,7 @@
 #!/bin/bash
+# miru: tui-menu | kiqkuk
 
-LIST="$HOME/.local/share/miru/apps.list"
+LIST="$HOME/.local/share/miru/data/apps.list"
 [ ! -f "$LIST" ] && touch "$LIST"
 
 out=$(fzf \
@@ -32,19 +33,13 @@ if [ "$key" == "ctrl-h" ]; then
   [ -z "$out_all" ] && exit 0
 
   mapfile -t res_all <<< "$out_all"
-  query="${res_all[0]}"
-  sel="${res_all[1]}"
-fi
-
-if [[ "$query" == *" "* ]]; then
-  final_cmd="$query"
+  final_cmd="${res_all[1]:-${res_all[0]}}"
 else
-  temp_cmd="${sel:-$query}"
-  if [[ "$temp_cmd" == *"|"* ]]; then
-    final_cmd=$(echo "$temp_cmd" | cut -d'|' -f2 | xargs)
+  if [ -n "$sel" ]; then
+    final_cmd=$(echo "$sel" | cut -d'|' -f2 | xargs)
   else
-    final_cmd="$temp_cmd"
+    final_cmd="$query"
   fi
 fi
 
-[ -n "$final_cmd" ] && setsid --fork sh -c "$final_cmd" >/dev/null 2>&1
+[ -n "$final_cmd" ] && setsid --fork $final_cmd >/dev/null 2>&1

@@ -1,14 +1,9 @@
 #!/bin/bash
+# miru: sb-music | kiqkuk
 
-PLAYERS="mpv,chromium,qutebrowser"
-
-if ! pgrep -f "mpv|chromium|qutebrowser" > /dev/null; then
-    exit 0
-fi
-
-STATUS=$(playerctl --player=$PLAYERS status 2>/dev/null)
-TITLE=$(playerctl --player=$PLAYERS metadata title 2>/dev/null)
-ARTIST=$(playerctl --player=$PLAYERS metadata artist 2>/dev/null)
+STATUS=$(playerctl status 2>/dev/null)
+TITLE=$(playerctl metadata title 2>/dev/null)
+ARTIST=$(playerctl metadata artist 2>/dev/null)
 
 [ -z "$STATUS" ] && exit 0
 
@@ -23,7 +18,7 @@ ICON="󰎈"
 TEXT="$FULL_TEXT   "
 LENGTH=${#TEXT}
 
-if [ "$FULL_TEXT" -le "$WIDTH" ]; then
+if [ "${#FULL_TEXT}" -le "$WIDTH" ]; then
     DISPLAY_TEXT="$FULL_TEXT"
 else
     NOW=$(date +%s)
@@ -34,4 +29,4 @@ else
     DISPLAY_TEXT="${DISPLAY_TEXT:0:$WIDTH}"
 fi
 
-echo "$ICON $DISPLAY_TEXT" | rg -o '.*'
+echo "$ICON $DISPLAY_TEXT"

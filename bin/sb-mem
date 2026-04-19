@@ -1,10 +1,15 @@
 #!/bin/bash
+# miru: sb-mem | kiqkuk
 
-mem_line=$(free -h | rg -w "^Mem")
+while read -r name value unit; do
+    case "$name" in
+        MemTotal:) total=$value ;;
+        MemAvailable:) avail=$value ;;
+    esac
+done < /proc/meminfo
 
-read -r _ _ used _ _ _ _ <<< "$mem_line"
+used_gib_x10=$(( (total - avail) * 10 / 1048576 ))
+main=$(( used_gib_x10 / 10 ))
+rest=$(( used_gib_x10 % 10 ))
 
-used_clean=${used/Gi/G}
-used_clean=${used_clean/Mi/M}
-
-echo "  $used_clean"
+echo " ${main}.${rest}G"

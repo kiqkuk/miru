@@ -1,4 +1,5 @@
 #!/bin/bash
+# miru: vol-control | kiqkuk
 
 wpctl "$@"
 pkill -RTMIN+10 someblocks

@@ -1,23 +1,29 @@
 #!/bin/bash
+# miru: sb-vol | kiqkuk
 
 status=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)
+[ $? -ne 0 ] && echo "󰝟 No Sink" && exit 0
 
-if [ $? -ne 0 ]; then
-	echo "󰝟 No Sink"
-  exit 0
+vol_raw=$(echo "$status" | sed 's/Volume: //; s/ .*//')
+
+if [[ "$vol_raw" == "1.00" ]]; then
+    vol_perc=100
+else
+    vol_perc=$((10#${vol_raw#0.}))
 fi
-
-vol_raw=$(echo "$status" | rg -oP '0\.\d+')
-vol_clean=${vol_raw#0.}
-vol_perc=$((10#${vol_clean:-0}))
 
 if [[ "$status" == *"[MUTED]"* ]]; then
   echo "󰝟 Mute"
 else
-  if [ "$vol_perc" -eq 0 ]; then ICON="󰝟";
-  elif [ "$vol_perc" -lt 40 ]; then ICON="󰕿";
-  elif [ "$vol_perc" -lt 70 ]; then ICON="󰖀";
-  else ICON="󰕾"; fi
-    
+  if [ "$vol_perc" -eq 0 ]; then
+    ICON="󰝟"
+  elif [ "$vol_perc" -lt 40 ]; then
+    ICON="󰕿"
+  elif [ "$vol_perc" -lt 70 ]; then
+    ICON="󰖀"
+  else
+    ICON="󰕾"
+  fi
+  
   echo "$ICON ${vol_perc}%"
 fi

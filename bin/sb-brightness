@@ -1,4 +1,5 @@
 #!/bin/bash
+# miru: sb-brightness | kiqkuk
 
 backlight_path="/sys/class/backlight/intel_backlight"
 

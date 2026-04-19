@@ -1,6 +1,4 @@
-# --- ZSH MAIN CONFIGURATION ---
-# Part of kiqkuk's dotfiles
-# Handles environment and modular shell configs.
+# miru: main zsh configs | kiqkuk
 
 ZSH_CONF="$HOME/.local/share/miru/data/shell"
 

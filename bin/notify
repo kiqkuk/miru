@@ -1,4 +1,5 @@
 #!/bin/bash
+# miru: notify | kiqkuk
 
 MESSAGE="$1"
 DURATION=${2:-6}
@@ -6,8 +7,8 @@ NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
 TIME_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify_time"
 
 START_TIME=$(date +%s)
-echo "$MESSAGE" > "$NOTIF_FILE"
-echo "$START_TIME" > "$TIME_FILE"
+printf "$MESSAGE" > "$NOTIF_FILE"
+printf "$START_TIME" > "$TIME_FILE"
 
 pkill -RTMIN+13 someblocks
 sleep "$DURATION"

@@ -1,3 +1,5 @@
+# miru: prompt | kiqkuk
+
 precmd() {
   if [[ -z "$FIRST_PROMPT" ]]; then
     FIRST_PROMPT=1

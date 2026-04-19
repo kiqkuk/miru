@@ -1,4 +1,5 @@
 #!/bin/bash
+# miru: audit | kiqkuk
 
 DOTS="$HOME/.local/share/miru"
 [[ ! -d "$DOTS" ]] && { echo "ERROR: Dots repo not found"; exit 1; }
@@ -7,11 +8,9 @@ sudo -v
 
 echo "--- AUDIT: DOTS RECURSIVE CHECK ---"
 
-# checking files to audit
 fd -t f . "$DOTS" | while read -r DOT_FILE; do
   REL_PATH="${DOT_FILE#$DOTS/}"
 
-  # mapping path
   if [[ "$REL_PATH" == "etc/"* ]]; then
     TARGET_FILE="/etc/${REL_PATH#etc/}"
   elif [[ "$REL_PATH" == "config/"* ]]; then
@@ -22,13 +21,11 @@ fd -t f . "$DOTS" | while read -r DOT_FILE; do
     continue
   fi
 
-  # check if file is exist
   if [[ ! -f "$TARGET_FILE" ]]; then
     echo "[!] MISSING: $TARGET_FILE"
     continue
   fi
 
-  # checking if file is symlink
   if [[ "$REL_PATH" == "config/"* ]]; then
     if [[ -L "$TARGET_FILE" ]]; then
       LINK_TARGET=$(readlink -f "$TARGET_FILE")
@@ -40,7 +37,6 @@ fd -t f . "$DOTS" | while read -r DOT_FILE; do
     fi
   fi
 
-  # diff check
   if ! sudo diff -q "$DOT_FILE" "$TARGET_FILE" > /dev/null; then
     echo "[X] DRIFT DETECTED: $REL_PATH"
   fi

@@ -1,14 +1,9 @@
-# custom config.py for qutebrowser
-# author: kiqkuk
+# miru: config.py | kiqkuk
+# qutebrowser
 #
 # Documentation:
 #   qute://help/configuring.html
 #   qute://help/settings.html
-
-import os
-
-# bug video flicker
-os.environ["QTWEBENGINE_FORCE_USE_GBM"] = "0"
 
 # Change the argument to True to still load settings configured via autoconfig.yml
 config.load_autoconfig(False)

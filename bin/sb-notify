@@ -1,4 +1,5 @@
 #!/bin/bash
+# miru: sb-notify | kiqkuk
 
 NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
 TIME_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify_time"

@@ -1,3 +1,4 @@
 #!/bin/bash
+# miru: tui-cheatsheet | kiqkuk
 
-fzf --reverse --no-info --no-scrollbar --header="MODKEY = Super or Logo" --prompt="Cheatsheet: " < ~/.local/share/miru/keymaps.txt
+fzf --reverse --no-info --no-scrollbar --header="MODKEY = Super or Logo" --prompt="Cheatsheet: " < ~/.local/share/miru/data/keymaps.txt

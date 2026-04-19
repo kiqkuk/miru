@@ -1,4 +1,5 @@
 #!/bin/bash
+# miru: deploy | kiqkuk
 
 SCRIPT_PATH=$(realpath "$0")
 MIRU_DIR=$(dirname "$(dirname "$SCRIPT_PATH")")

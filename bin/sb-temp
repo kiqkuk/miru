@@ -1,20 +1,22 @@
 #!/bin/bash
+# miru: sb-temp | kiqkuk
 
-temp=$(sensors | rg -oP 'Package id 0:.*?\+\K[0-9.]+' | head -n 1)
-[ -z "$temp" ] && { echo " ERR"; exit 1; }
+temp_path=$(grep -l "x86_pkg_temp" /sys/class/thermal/thermal_zone*/type | sed 's/type/temp/')
 
-temp_int=${temp%.*}
-
-NOTIF_FILE="${XDG_RUNTIME_DIR:-/tmp}/notify"
-
-if [ "$temp_int" -ge 75 ]; then
-    ICON="🔥"
-
-    if [ ! -s "$NOTIF_FILE" ]; then
-        notify "HOT: ${temp_int}°C" 10 &
-    fi
+if [ -f "$temp_path" ]; then
+    read -r temp_raw < "$temp_path"
+    temp_int=$(( temp_raw / 1000 ))
 else
-    ICON=""
+    echo " ERR"
+    exit 1
+fi
+
+ICON=""
+[ "$temp_int" -ge 75 ] && ICON="󰸁"
+[ "$temp_int" -ge 75 ] && ICON="🔥"
+
+if [ "$temp_int" -ge 75 ] && [ ! -s "${XDG_RUNTIME_DIR:-/tmp}/notify" ]; then
+    notify "HOT: ${temp_int}°C" 10 &
 fi
 
 echo "$ICON ${temp_int}°C"

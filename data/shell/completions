@@ -1,5 +1,4 @@
-# --- ZSH COMPLETION ---
-# Configures advanced Tab-completion with menu selection and case-insensitivity.
+# miru: zsh completions | kiqkuk
 
 if [[ -d /usr/share/zsh/site-functions ]]; then
   fpath=(/usr/share/zsh/site-functions $fpath)

@@ -1,10 +1,7 @@
 #!/bin/bash
+# miru: sb-wifi | kiqkuk
 
-ssid=$(iwctl station wlan0 show | \
-  sed 's/\x1b[[0-9;]*m//g' | \
-  rg -oP 'Connected network\s+\K.*' | \
-  sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
-)
+ssid=$(iwctl station wlan0 show | sed -n 's/.*Connected network[[:space:]]*//p' | sed 's/\x1b\[[0-9;]*m//g' | xargs)
 
 if [ -z "$ssid" ]; then
     echo "󰤮 Disconnected"
