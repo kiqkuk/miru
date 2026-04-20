@@ -13,9 +13,7 @@ mpv-mpris
 ninja
 pango
 pipewire
-pipewire-alsa
 pipewire-jack
-pipewire-pulse
 playerctl
 ripgrep
 slurp
