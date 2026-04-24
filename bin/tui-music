@@ -1,48 +1,23 @@
 #!/bin/bash
 # miru: tui-music | kiqkuk
 
-SOCKET="/tmp/mpv-music.sock"
+query=$(fzf --reverse --print-query --no-info --prompt="󰎈 Search: " </dev/null | head -1)
+[ -z "$query" ] && exit 0
 
-if [ "$1" == "--remote" ]; then
-  printf "%s\n" "$2" | socat - "$SOCKET" >/dev/null 2>&1
-  exit 0
-fi
+printf "\rSearching $query..."
+results=$(yt-dlp --quiet --flat-playlist \
+        --print "%(title)s -- %(id)s" \
+        "ytsearch10:$query")
+[ -z "$results" ] && { echo "Not found"; exit 0; }
 
-play_it() {
-  v_id="${1##* -- }"
-  URL="https://www.youtube.com/watch?v=$v_id&list=RD$v_id"
+selected=$(echo "$results" | fzf --reverse --no-info --prompt="󰝚 Play: ")
+[ -z "$selected" ] && exit 0
 
-  if pgrep -x "mpv" >/dev/null && [ -S "$SOCKET" ]; then
-    printf "loadfile \"$URL\" replace\n" | socat - "$SOCKET" >/dev/null 2>&1
-  else
-    rm -f "$SOCKET"
-    nohup mpv --no-video \
-        --no-audio-display \
-        --input-ipc-server="$SOCKET" \
-        --cache=yes --demuxer-max-bytes=512KiB \
-        --ytdl-raw-options="no-check-certificate=,yes-playlist=" \
-        "$URL" > /dev/null 2>&1 &
-  fi
-}
+v_id="${selected##* -- }"
+URL="https://www.youtube.com/watch?v=$v_id&list=RD$v_id"
 
-while true; do
-  query=$(fzf --reverse --print-query --no-info \
-              --prompt="󰎈 Search: " \
-              --header "CTRL-Q: Quit" \
-              --bind "ctrl-p:execute($0 --remote 'cycle pause')" \
-              --bind "ctrl-b:execute($0 --remote 'playlist-prev')" \
-              --bind "ctrl-n:execute($0 --remote 'playlist-next')" \
-              --bind "ctrl-q:execute($0 --remote 'quit')+abort" < /dev/null)
-  [ -z "$query" ] && exit 0
-  
-  printf "\rSearching $query..."
-  results=$(yt-dlp --quiet --flat-playlist \
-              --no-check-certificates \
-              --no-warnings \
-              --max-downloads 1 \
-              --print "%(title)s -- %(id)s" \
-              "ytsearch10:$query")
-  [ -z "$results" ] && continue
-  selected=$(echo "$results" | fzf --reverse --no-info --prompt="󰝚 Play: ")
-  [ -n "$selected" ] && play_it "$selected"
-done
+printf "\rPlaying $selected..."
+mpv --no-video \
+    --term-playing-msg='${media-title}' \
+    --ytdl-raw-options="cookies-from-browser=chromium,yes-playlist=,lazy-playlist=" \
+    "$URL"

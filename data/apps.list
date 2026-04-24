@@ -1,4 +1,5 @@
+figma | chromium --app=https://www.figma.com --user-data-dir=$HOME/.local/share/figma-webapp
 foot
-music | foot -T Music tui-music
+music | footclient -T Music tui-music
 neovim | foot nvim
 qutebrowser

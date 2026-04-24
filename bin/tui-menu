@@ -42,4 +42,4 @@ else
   fi
 fi
 
-[ -n "$final_cmd" ] && setsid --fork $final_cmd >/dev/null 2>&1
+[ -n "$final_cmd" ] && setsid --fork sh -c "$final_cmd" >/dev/null 2>&1

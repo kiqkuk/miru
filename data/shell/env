@@ -21,6 +21,7 @@ setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_REDUCE_BLANKS
 
 export PYTHONSTARTUP="$XDG_CONFIG_HOME/python/pythonrc"
+export WGETRC="$XDG_CONFIG_HOME/whet/wgetrc"
 
 # Default Applications
 export TERMINAL="foot"
