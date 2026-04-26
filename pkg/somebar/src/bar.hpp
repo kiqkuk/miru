@@ -39,7 +39,7 @@ class Bar {
 	wl_unique_ptr<PangoContext> _pangoContext;
 	std::optional<ShmBuffer> _bufs;
 	std::vector<Tag> _tags;
-	BarComponent _layoutCmp, _titleCmp, _statusCmp;
+	BarComponent _layoutCmp, _titleCmp, _statusCmp, _sepCmp;
 	bool _selected;
 	bool _invalid {false};
 
@@ -51,6 +51,8 @@ class Bar {
 	cairo_t* _painter {nullptr};
 	int _x;
 	ColorScheme _colorScheme;
+
+	uint32_t calculateWidth();
 
 	void layerSurfaceConfigure(uint32_t serial, uint32_t width, uint32_t height);
 	void render();

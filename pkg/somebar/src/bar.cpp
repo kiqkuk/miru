@@ -93,6 +93,7 @@ Bar::Bar()
 	_layoutCmp = createComponent();
 	_titleCmp = createComponent();
 	_statusCmp = createComponent();
+	_sepCmp = createComponent("|");
 }
 
 const wl_surface* Bar::surface() const
@@ -115,11 +116,10 @@ void Bar::show(wl_output* output)
 		_surface.get(), output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM, "net.tapesoftware.Somebar"));
 	zwlr_layer_surface_v1_add_listener(_layerSurface.get(), &_layerSurfaceListener, this);
 	auto anchor = topbar ? ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP : ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
-	zwlr_layer_surface_v1_set_anchor(_layerSurface.get(),
-		anchor | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
+	zwlr_layer_surface_v1_set_anchor(_layerSurface.get(), anchor);
 
 	auto barSize = barfont.height + paddingY * 2;
-	zwlr_layer_surface_v1_set_size(_layerSurface.get(), 0, barSize);
+	zwlr_layer_surface_v1_set_size(_layerSurface.get(), 1, barSize);
 	zwlr_layer_surface_v1_set_exclusive_zone(_layerSurface.get(), barSize);
 	wl_surface_commit(_surface.get());
 }
@@ -210,7 +210,7 @@ void Bar::layerSurfaceConfigure(uint32_t serial, uint32_t width, uint32_t height
 	if (_bufs && width == _bufs->width && height == _bufs->height) {
 		return;
 	}
-	_bufs.emplace(width, height, WL_SHM_FORMAT_XRGB8888);
+	_bufs.emplace(width, height, WL_SHM_FORMAT_ARGB8888);
 	render();
 }
 
@@ -219,11 +219,35 @@ void Bar::skip(int w)
 	_x += w;
 }
 
+uint32_t Bar::calculateWidth()
+{
+	uint32_t w = 0;
+	for (auto &tag : _tags) {
+		if (tag.numClients > 0 || (tag.state & TagState::Active))
+			w += tag.component.width() + paddingX * 2;
+	}
+	if (_showLayout)
+		w += _layoutCmp.width() + paddingX * 2;
+	w += _titleCmp.width() + paddingX * 2;
+
+	if (_statusCmp.width() > 0) {
+		w += _sepCmp.width() + paddingX * 2;
+		w += _statusCmp.width() + paddingX * 2;
+	}
+	return w;
+}
+
 void Bar::render()
 {
-	if (!_bufs) {
+	if (!visible()) return;
+	uint32_t neededWidth = calculateWidth();
+
+	if (!_bufs || neededWidth != _bufs->width) {
+		zwlr_layer_surface_v1_set_size(_layerSurface.get(), neededWidth, barfont.height + paddingY * 2);
+		wl_surface_commit(_surface.get());
 		return;
 	}
+
 	auto img = wl_unique_ptr<cairo_surface_t> {cairo_image_surface_create_for_data(
 		_bufs->data(),
 		CAIRO_FORMAT_ARGB32,
@@ -233,6 +257,11 @@ void Bar::render()
 		)};
 	auto painter = wl_unique_ptr<cairo_t> {cairo_create(img.get())};
 	_painter = painter.get();
+
+	cairo_set_operator(_painter, CAIRO_OPERATOR_CLEAR);
+	cairo_paint(_painter);
+	cairo_set_operator(_painter, CAIRO_OPERATOR_OVER);
+
 	pango_cairo_update_context(_painter, _pangoContext.get());
 	_x = 0;
 
@@ -285,14 +314,9 @@ void Bar::renderTags()
 
 void Bar::renderStatus()
 {
-	pango_cairo_update_layout(_painter, _statusCmp.pangoLayout.get());
-	beginBg();
-	auto start = _bufs->width - _statusCmp.width() - paddingX*2;
-	cairo_rectangle(_painter, _x, 0, _bufs->width-_x+start, _bufs->height);
-	cairo_fill(_painter);
-
-	_x = start;
+	if (_statusCmp.width() <= 0) return;
 	setColorScheme(colorInactive, false);
+	renderComponent(_sepCmp);
 	if (_statusCmp.width() > 0)
 	{
 		renderComponent(_statusCmp);
@@ -332,8 +356,10 @@ void Bar::renderComponent(BarComponent& component, bool visible)
 	pango_cairo_update_layout(_painter, component.pangoLayout.get());
 	
 	beginBg();
+	cairo_set_operator(_painter, CAIRO_OPERATOR_SOURCE);
 	cairo_rectangle(_painter, _x, 0, size, _bufs->height);
 	cairo_fill(_painter);
+	cairo_set_operator(_painter, CAIRO_OPERATOR_OVER);
 	cairo_move_to(_painter, _x+paddingX, paddingY);
 
 	beginFg();
